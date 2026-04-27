@@ -9,74 +9,86 @@ The project is designed to demonstrate numerical methods used in quantitative fi
 ## 📌 Features
 
 ### 🧮 Option Pricing
-- European call/put options (Black–Scholes benchmark available)
-- Asian options (arithmetic and geometric averaging)
+- **European Options:** Validated against analytical Black–Scholes benchmarks.
+- **Asian Options:** Arithmetic path-dependent averaging.
 
 ### 📊 Monte Carlo Simulation
-- Geometric Brownian Motion (GBM) path generation
-- Flexible multi-path, multi-step simulation engine
-- Risk-neutral pricing framework
+- **Geometric Brownian Motion (GBM):** Optimized vectorized path generation.
+- **Flexible Engine:** Supports variable path counts ($N$) and time steps ($dt$).
 
 ### ⚙️ Variance Reduction
-- Control variates (European ↔ Asian correlation)
-- Extensible design for additional techniques
-
-### 📉 Statistical Analysis
-- Standard error estimation
-- Confidence intervals
-- Benchmark error evaluation
+- **Control Variates:** Leveraging the correlation between European and Asian payoffs to stabilize estimators.
 
 ### 📈 Convergence Analysis
-- Monte Carlo convergence visualization
-- Empirical verification of \( O(1/\sqrt{N}) \) behavior
+- Empirical verification of $O(1/\sqrt{N})$ error decay.
+- Automated visualization of confidence interval "funnels."
+
+---
+
+## 🔬 Experimental Results
+
+The following results were obtained with $N = 100,000$ paths and $100$ time steps ($S_0=100, K=100, T=1.0, r=0.05, \sigma=0.2$).
+
+### 1. European Option Validation
+The Monte Carlo estimate is highly consistent with the analytical Black-Scholes price.
+
+| Metric | Value |
+| :--- | :--- |
+| **MC Price** | 10.4231 |
+| **Black-Scholes** | 10.4506 |
+| **Relative Error** | 0.26% |
+| **95% Confidence Interval** | [10.3323, 10.5139] |
+
+### 2. Asian Option & Variance Reduction
+The **Control Variate** method significantly reduces the estimator's variance, providing a much more stable price with half the standard error of the standard approach.
+
+| Method | Price Estimate | Standard Error | 95% Confidence Interval |
+| :--- | :--- | :--- | :--- |
+| **Standard MC** | 5.7360 | 0.0251 | [5.6869, 5.7851] |
+| **Control Variate** | 5.7485 | 0.0135 | [5.7220, 5.7751] |
+
+---
+
+## 📉 Convergence Analysis
+
+### European Path Stability
+The plot below shows the MC estimate converging toward the Black-Scholes benchmark. The blue shaded region represents the narrowing 95% confidence interval as $N$ increases.
+
+![European Convergence](figures/european_convergence.png)
+
+### Variance Reduction Performance
+This comparison highlights how the Control Variate (Green) reaches a converged state much faster and with significantly less "jitter" than the Standard MC (Red dashed).
+
+![Asian Convergence](figures/asian_convergence.png)
 
 ---
 
 ## 🧠 Mathematical Model
 
 Asset dynamics under risk-neutral measure:
+$$dS_t = r S_t dt + \sigma S_t dW_t$$
 
-\[
-dS_t = r S_t dt + \sigma S_t dW_t
-\]
+Exact discretization for simulation:
+$$S_{t+\Delta t} = S_t \exp\left((r - \frac{1}{2}\sigma^2)\Delta t + \sigma \sqrt{\Delta t} Z\right)$$
 
-Discretization:
-
-\[
-S_{t+\Delta t} = S_t \exp\left((r - \frac{1}{2}\sigma^2)\Delta t + \sigma \sqrt{\Delta t} Z\right)
-\]
-
-Option pricing:
-
-\[
-V = e^{-rT} \mathbb{E}[\text{payoff}]
-\]
+Risk-neutral pricing:
+$$V = e^{-rT} \mathbb{E}[\text{payoff}]$$
 
 ---
 
 ## 📁 Project Structure
+
+```text
 mc_option_pricer/
 │
 ├── models/
 │   ├── monte_carlo.py        # GBM simulation engine
-│   ├── black_scholes.py      # Analytical Black–Scholes formula
-│   ├── variance_reduction.py # Control variates & variance reduction tools
-│
+│   ├── black_scholes.py      # Analytical benchmark
+│   └── variance_reduction.py # Control variates implementation
 ├── options/
-│   ├── european.py           # European call/put payoff functions
-│   ├── asian.py              # Asian (path-dependent) payoff functions
-│
+│   ├── european.py           # European payoff logic
+│   └── asian.py              # Path-dependent payoff logic
 ├── utils/
-│   ├── statistics.py         # Confidence intervals, stderr, error metrics
-│
-├── main.py                   # Full experiment runner + convergence study
-└── README.md
-
----
-
-## 🚀 Installation
-
-### Requirements
-
-```bash
-pip install numpy scipy matplotlib
+│   └── statistics.py         # CI and error metrics
+├── figures/                  # Generated convergence plots
+└── main.py                   # Experiment runner
