@@ -92,7 +92,7 @@ mc_option_pricer/
 │   └── statistics.py         # CI and error metrics
 ├── figures/                  # Generated convergence plots
 └── main.py                   # Experiment runner
-
+```
 ---
 
 ## 🚀 Installation & Usage
@@ -103,6 +103,7 @@ mc_option_pricer/
    ```bash
    git clone [https://github.com/ngp66/mc-option-pricing.git](https://github.com/ngp66/mc-option-pricing.git)
    cd mc-option-pricing
+   ```
 
 2. Create a virtual environment (recommended)
     python -m venv venv
@@ -113,12 +114,14 @@ mc_option_pricer/
    The project requires Python 3.8+ and the following scientific libraries:
    ```bash
    pip install numpy scipy matplotlib
+   ```
 
 ### 💻 Usage
    Run the main simulation script to execute the pricing engine and perform the convergence study:
    ```bash
    python main.py
-
+   ```
+   
 The script will:
 
 Compute Prices: Output statistical summaries (Mean, StdErr, 95% CI) for European and Asian options directly to the console.
