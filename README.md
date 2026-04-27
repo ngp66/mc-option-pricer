@@ -21,7 +21,7 @@ The project is designed to demonstrate numerical methods used in quantitative fi
 
 ### 📈 Convergence Analysis
 - Empirical verification of $O(1/\sqrt{N})$ error decay.
-- Automated visualization of confidence interval "funnels."
+- Automated visualization of confidence intervals.
 
 ---
 
