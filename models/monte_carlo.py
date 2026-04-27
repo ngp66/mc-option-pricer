@@ -15,7 +15,7 @@ class MonteCarloEngine:
         paths = np.zeros((self.n_paths, self.n_steps + 1))
         paths[:, 0] = self.S0
 
-        for t in range(1, self.n_steps + 1):
+        for t in range(1, self.n_steps + 1): # vectorise to improve speed
             Z = np.random.standard_normal(self.n_paths)
 
             paths[:, t] = paths[:, t - 1] * np.exp(
