@@ -106,9 +106,11 @@ mc_option_pricer/
    ```
 
 2. Create a virtual environment (recommended)
+    ```bash
     python -m venv venv
     source venv/bin/activate   # macOS/Linux
     venv\Scripts\activate      # Windows
+    ```
 
 3. Install dependencies:
    The project requires Python 3.8+ and the following scientific libraries:
@@ -121,9 +123,9 @@ mc_option_pricer/
    ```bash
    python main.py
    ```
-   
+
 The script will:
 
-Compute Prices: Output statistical summaries (Mean, StdErr, 95% CI) for European and Asian options directly to the console.
+- Compute Prices: Output statistical summaries (Mean, StdErr, 95% CI) for European and Asian options directly to the console.
 
-Generate Plots: Create and save high-resolution convergence charts in the figures/ directory.
+- Generate Plots: Create and save high-resolution convergence charts in the figures/ directory.
