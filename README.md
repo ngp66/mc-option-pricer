@@ -2,7 +2,7 @@
 
 A Python Monte Carlo simulation framework for pricing European and path-dependent options, with variance reduction techniques and statistical validation tools.
 
-The project is designed to demonstrate numerical methods used in quantitative finance, including stochastic simulation, derivative pricing, and Monte Carlo convergence analysis.
+This project implements Monte Carlo methods for derivative pricing and model comparison under stochastic volatility frameworks.
 
 ---
 
@@ -27,9 +27,10 @@ The project is designed to demonstrate numerical methods used in quantitative fi
 
 ## 🔬 Experimental Results
 
-The following results were obtained with $N = 100,000$ paths and $100$ time steps ($S_0=100, K=100, T=1.0, r=0.05, \sigma=0.2$).
+The following results were obtained with $N = 100,000$ paths and $100$ time steps ($S_0=100, K=100, T=1.0, r=0.05, \sigma=0.2$ for GBM; stochastic volatility parameters for Heston are held fixed across runs).
 
-### 1. European Option Validation
+### 1. European Option Validation (GBM)
+
 The Monte Carlo estimate is highly consistent with the analytical Black-Scholes price.
 
 | Metric | Value |
@@ -39,13 +40,24 @@ The Monte Carlo estimate is highly consistent with the analytical Black-Scholes 
 | **Relative Error** | 0.26% |
 | **95% Confidence Interval** | [10.3323, 10.5139] |
 
-### 2. Asian Option & Variance Reduction
-The **Control Variate** method significantly reduces the estimator's variance, providing a much more stable price with half the standard error of the standard approach.
+### 2. Asian Option & Variance Reduction (GBM)
+
+The **Control Variate** method significantly reduces estimator variance, producing a more stable price estimate.
 
 | Method | Price Estimate | Standard Error | 95% Confidence Interval |
 | :--- | :--- | :--- | :--- |
 | **Standard MC** | 5.7360 | 0.0251 | [5.6869, 5.7851] |
 | **Control Variate** | 5.7485 | 0.0135 | [5.7220, 5.7751] |
+
+### 3. Model Comparison (GBM vs Heston)
+
+To assess the impact of stochastic volatility, the same Monte Carlo framework is applied under both GBM and Heston dynamics.
+
+| Model | European Option | Asian Option |
+| :--- | :--- | :--- |
+| **GBM (Black–Scholes)** | 10.3755 | 5.7227 |
+| **Heston (Stochastic Volatility)** | 10.2561 | 5.6637 |
+| **Black–Scholes Benchmark** | 10.4506 | — |
 
 ---
 
@@ -65,14 +77,50 @@ This comparison highlights how the Control Variate (Green) reaches a converged s
 
 ## 🧠 Mathematical Model
 
+### GBM (Black–Scholes Dynamics)
+
 Asset dynamics under risk-neutral measure:
 $$dS_t = r S_t dt + \sigma S_t dW_t$$
 
 Exact discretization for simulation:
-$$S_{t+\Delta t} = S_t \exp\left((r - \frac{1}{2}\sigma^2)\Delta t + \sigma \sqrt{\Delta t} Z\right)$$
+$$S_{t+\Delta t} = S_t \exp\left(\left(r - \frac{1}{2}\sigma^2\right)\Delta t + \sigma \sqrt{\Delta t} Z\right)$$
 
 Risk-neutral pricing:
 $$V = e^{-rT} \mathbb{E}[\text{payoff}]$$
+
+---
+
+### Heston Stochastic Volatility Model
+
+Asset price dynamics:
+$$dS_t = r S_t dt + \sqrt{v_t}\, S_t dW_t^S$$
+
+Variance process (mean-reverting square-root diffusion):
+$$dv_t = \kappa(\theta - v_t)dt + \xi \sqrt{v_t}\, dW_t^v$$
+
+Correlation structure:
+$$dW_t^S \, dW_t^v = \rho \, dt$$
+
+---
+
+### Risk-Neutral Pricing Under Stochastic Volatility
+
+$$V = e^{-rT}\mathbb{E}[\text{payoff}(S_T)]$$
+
+where the expectation is taken over both the asset path \(S_t\) and variance path \(v_t\).
+
+---
+
+### Numerical Simulation Scheme
+
+Asset evolution (Euler–Maruyama form):
+$$S_{t+\Delta t} = S_t \exp\left(\left(r - \frac{1}{2}v_t\right)\Delta t + \sqrt{v_t \Delta t} Z_1\right)$$
+
+Variance evolution:
+$$v_{t+\Delta t} = \left|v_t + \kappa(\theta - v_t)\Delta t + \xi \sqrt{v_t \Delta t} Z_2\right|$$
+
+Correlated Brownian shocks:
+$$Z_2 = \rho Z_1 + \sqrt{1 - \rho^2}\, Z^\perp$$
 
 ---
 
@@ -84,6 +132,7 @@ mc_option_pricer/
 ├── models/
 │   ├── monte_carlo.py        # GBM simulation engine
 │   ├── black_scholes.py      # Analytical benchmark
+│   ├── heston.py             # Heston volatility
 │   └── variance_reduction.py # Control variates implementation
 ├── options/
 │   ├── european.py           # European payoff logic

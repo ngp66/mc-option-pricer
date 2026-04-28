@@ -4,15 +4,17 @@ import os
 
 from models.monte_carlo import MonteCarloEngine
 from models.black_scholes import black_scholes
+from models.heston import HestonEngine
 from options.european import EuropeanOption
 from options.asian import AsianOption
+from models.variance_reduction import apply_control_variate
+from utils.statistics import summary_stats
 
 np.random.seed(42)
 
 
-def convergence_study_european(engine, option, paths):
+def convergence_study_european(engine, option, paths=None, n_max=20000, step=500):
     n_total = paths.shape[0]
-    step = 500
     sizes = np.arange(step, n_total + 1, step, dtype=int)
 
     S_T = paths[:, -1]
@@ -22,12 +24,11 @@ def convergence_study_european(engine, option, paths):
     cumulative_means = np.cumsum(discounted) / np.arange(1, len(discounted) + 1)
     estimates = cumulative_means[sizes - 1]
 
-    return sizes, estimates
+    return sizes, estimates, discounted
 
 
-def convergence_study_asian(engine, option, paths):
+def convergence_study_asian(engine, option, paths=None, n_max=20000, step=500):
     n_total = paths.shape[0]
-    step = 500
     sizes = np.arange(step, n_total + 1, step, dtype=int)
 
     payoff = option.payoff(paths)
@@ -39,60 +40,56 @@ def convergence_study_asian(engine, option, paths):
     return sizes, estimates
 
 
-def run_engine(engine):
-    return engine.generate_paths()
-
-
 def main():
     os.makedirs("figures", exist_ok=True)
 
+    # parameters
     S0 = 100
     K = 100
     T = 1.0
     r = 0.05
+    sigma = 0.2
 
     n_paths = 100000
     n_steps = 100
 
-    gbm_engine = MonteCarloEngine(
-        S0, T, r,
-        sigma=0.2,
+    # models
+    gbm_engine = MonteCarloEngine(S0, T, r, sigma, n_paths, n_steps)
+
+    heston_engine = HestonEngine(
+        S0=S0,
+        v0=0.04,
+        T=T,
+        r=r,
+        kappa=2.0,
+        theta=0.04,
+        xi=0.5,
+        rho=-0.7,
         n_paths=n_paths,
         n_steps=n_steps
-    )
-
-    heston_engine = MonteCarloEngine(
-        S0, T, r,
-        sigma=0.2,
-        n_paths=n_paths,
-        n_steps=n_steps,
-        model="heston",
-        model_params={
-            "v0": 0.04,
-            "kappa": 2.0,
-            "theta": 0.04,
-            "xi": 0.5,
-            "rho": -0.7
-        }
     )
 
     european = EuropeanOption(K, "call")
     asian = AsianOption(K, "call")
 
-    gbm_paths = run_engine(gbm_engine)
-    heston_paths = run_engine(heston_engine)
+    # paths
+    gbm_paths = gbm_engine.generate_paths()
+    heston_paths, _ = heston_engine.generate_paths()
 
     gbm_S_T = gbm_paths[:, -1]
     heston_S_T = heston_paths[:, -1]
 
-    bs_price = black_scholes(S0, K, T, r, gbm_engine.sigma, "call")
+    # benchmark
+    bs_price = black_scholes(S0, K, T, r, sigma, "call")
 
+    # payoffs
     gbm_euro = np.exp(-r * T) * european.payoff(gbm_S_T)
     heston_euro = np.exp(-r * T) * european.payoff(heston_S_T)
 
     gbm_asian = np.exp(-r * T) * asian.payoff(gbm_paths)
     heston_asian = np.exp(-r * T) * asian.payoff(heston_paths)
 
+    # prices
     gbm_euro_price = np.mean(gbm_euro)
     heston_euro_price = np.mean(heston_euro)
 
@@ -106,38 +103,91 @@ def main():
     print("Heston Asian:", heston_asian_price)
     print("Black-Scholes:", bs_price)
 
-    sizes, gbm_conv = convergence_study_european(gbm_engine, european, gbm_paths)
-    _, heston_conv = convergence_study_european(heston_engine, european, heston_paths)
+    # European convergence
+    sizes_e, euro_conv, euro_discounted = convergence_study_european(
+        gbm_engine, european, paths=gbm_paths
+    )
 
-    bs_line = np.full_like(sizes, bs_price, dtype=float)
+    bs_line = np.full_like(sizes_e, bs_price, dtype=float)
 
-    plt.figure(figsize=(12, 8))
-    plt.plot(sizes, gbm_conv, label="GBM MC", linewidth=2.5)
-    plt.plot(sizes, heston_conv, label="Heston MC", linewidth=2.5)
-    plt.plot(sizes, bs_line, "--", label="Black-Scholes", color="black", alpha=0.8)
+    sigma_euro = np.std(euro_discounted)
+    stderr_e = sigma_euro / np.sqrt(sizes_e)
+    upper_e = euro_conv + 1.96 * stderr_e
+    lower_e = euro_conv - 1.96 * stderr_e
 
-    plt.title("European Option: GBM vs Heston Convergence")
-    plt.xlabel("Number of Paths")
-    plt.ylabel("Option Price")
-    plt.legend()
-    plt.grid(True)
+    plt.figure(figsize=(14, 9))
+    plt.plot(sizes_e, euro_conv, label="MC Estimate", color='blue', linewidth=3)
+    plt.plot(sizes_e, bs_line, "--", label="Black-Scholes", color='black', alpha=0.8)
+    plt.fill_between(sizes_e, lower_e, upper_e, color='blue', alpha=0.2,
+                     label="95% Confidence Interval")
+
+    plt.title("European Option: Monte Carlo Convergence Analysis", fontsize=24, fontweight='bold')
+    plt.xlabel("Number of Paths (N)", fontsize=20)
+    plt.ylabel("Option Price", fontsize=20)
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
+    plt.legend(fontsize=18)
+    plt.grid(True, linestyle='--', alpha=0.7)
     plt.tight_layout()
-    plt.savefig("figures/european_gbm_vs_heston.png", dpi=300)
+    plt.savefig("figures/european_convergence.png", dpi=300)
 
-    sizes_a, gbm_asian_conv = convergence_study_asian(gbm_engine, asian, gbm_paths)
-    _, heston_asian_conv = convergence_study_asian(heston_engine, asian, heston_paths)
+    # Asian convergence
+    sizes_a, asian_conv = convergence_study_asian(
+        gbm_engine, asian, paths=gbm_paths
+    )
 
-    plt.figure(figsize=(12, 8))
-    plt.plot(sizes_a, gbm_asian_conv, label="GBM MC", linewidth=2)
-    plt.plot(sizes_a, heston_asian_conv, label="Heston MC", linewidth=2)
+    asian_cv = apply_control_variate(
+        payoff=gbm_asian,
+        control=gbm_euro,
+        control_exact=bs_price
+    )
 
-    plt.title("Asian Option: GBM vs Heston Convergence")
-    plt.xlabel("Number of Paths")
-    plt.ylabel("Option Price")
-    plt.legend()
-    plt.grid(True)
+    asian_cv_conv = np.cumsum(asian_cv) / np.arange(1, n_paths + 1)
+    asian_cv_estimates = asian_cv_conv[sizes_a - 1]
+
+    final_asian_price = np.mean(asian_cv)
+    asian_line = np.full_like(sizes_a, final_asian_price, dtype=float)
+
+    sigma_asian_cv = np.std(asian_cv)
+    stderr_a = sigma_asian_cv / np.sqrt(sizes_a)
+    upper_a = asian_cv_estimates + 1.96 * stderr_a
+    lower_a = asian_cv_estimates - 1.96 * stderr_a
+
+    plt.figure(figsize=(14, 9))
+    plt.plot(sizes_a, asian_conv, label="Standard MC", color='red', linestyle='--', linewidth=2)
+    plt.plot(sizes_a, asian_cv_estimates, label="Control Variate MC", color='green', linewidth=3)
+    plt.plot(sizes_a, asian_line, "--", label="Converged Price", color='black', alpha=0.7)
+    plt.fill_between(sizes_a, lower_a, upper_a, color='green', alpha=0.2,
+                     label="CV 95% Confidence Interval")
+
+    plt.title("Asian Option: Variance Reduction Performance", fontsize=24, fontweight='bold')
+    plt.xlabel("Number of Paths (N)", fontsize=20)
+    plt.ylabel("Option Price", fontsize=20)
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
+    plt.legend(fontsize=18)
+    plt.grid(True, linestyle='--', alpha=0.7)
     plt.tight_layout()
-    plt.savefig("figures/asian_gbm_vs_heston.png", dpi=300)
+    plt.savefig("figures/asian_convergence.png", dpi=300)
+
+    # Heston vs GBM
+    plt.figure(figsize=(12, 8))
+
+    plt.hist(gbm_S_T, bins=120, density=True, alpha=0.5,
+             label="GBM $S_T$", color="blue")
+    plt.hist(heston_S_T, bins=120, density=True, alpha=0.5,
+             label="Heston $S_T$", color="orange")
+
+    plt.title("Terminal Asset Distribution: GBM vs Heston", fontsize=22, fontweight='bold')
+    plt.xlabel("$S_T$", fontsize=18)
+    plt.ylabel("Density", fontsize=18)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.legend(fontsize=16)
+    plt.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig("figures/heston_vs_gbm_distribution.png", dpi=300)
 
 
 if __name__ == "__main__":
