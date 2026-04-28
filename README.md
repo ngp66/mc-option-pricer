@@ -69,9 +69,15 @@ The plot below shows the MC estimate converging toward the Black-Scholes benchma
 ![European Convergence](figures/european_convergence.png)
 
 ### Variance Reduction Performance
-This comparison highlights how the Control Variate (Green) reaches a converged state much faster and with significantly less "jitter" than the Standard MC (Red dashed).
+This comparison highlights how the Control Variate (green) reaches a converged state faster than the Standard MC (red dashed).
 
 ![Asian Convergence](figures/asian_convergence.png)
+
+### Terminal Asset Distribution (GBM vs. Heston)
+
+The histogram illustrates the probability density of the terminal asset price $$S_T$$. While the GBM (blue) follows a standard log-normal distribution, the Heston (Orange) model exhibits higher kurtosis ("fat tails") and a noticeable skew. This visualizes why the Heston model provides a more nuanced pricing of extreme market moves compared to the constant-volatility Black-Scholes framework.
+
+![Heston](figures/heston_vs_gbm_distribution.png)
 
 ---
 
