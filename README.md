@@ -1,6 +1,6 @@
 # Monte Carlo Option Pricing Framework
 
-A Python Monte Carlo simulation framework for pricing European and path-dependent options, with variance reduction techniques and statistical validation tools.
+A research-oriented Monte Carlo framework for pricing European and path-dependent derivatives, featuring variance reduction, stochastic volatility (Heston), and statistical validation tools.
 
 This project implements Monte Carlo methods for derivative pricing and model comparison under stochastic volatility frameworks.
 
