@@ -11,9 +11,9 @@ A Monte Carlo framework for pricing European and path-dependent derivatives unde
 - **Asian Options:** Arithmetic path-dependent averaging.
 
 ### 📊 Monte Carlo Simulation
-- **Geometric Brownian Motion (GBM):** Optimized vectorized path generation.
+- **Geometric Brownian Motion (GBM):** Asset dynamics under the Black–Scholes model with constant volatility.
+- **Heston Model:** Stochastic volatility with mean-reverting variance and correlated Brownian motions.
 - **Flexible Engine:** Supports variable path counts ($N$) and time steps ($dt$).
-- **Heston model:** Stochastic volatility with mean-reverting variance and correlated Brownian motions.
 
 ### ⚙️ Variance Reduction
 - **Control Variates:** Leveraging the correlation between European and Asian payoffs to stabilize estimators.
@@ -30,7 +30,7 @@ The following results were obtained with $N = 100,000$ paths and $100$ time step
 
 ### 1. European Option Validation (GBM)
 
-The Monte Carlo estimate is highly consistent with the analytical Black-Scholes price.
+The Monte Carlo estimate is consistent with the analytical Black-Scholes price.
 
 | Metric | Value |
 | :--- | :--- |
@@ -63,7 +63,7 @@ To assess the impact of stochastic volatility, the same Monte Carlo framework is
 ## 📉 Convergence Analysis
 
 ### European Path Stability
-The plot shows Monte Carlo convergence toward the Black-Scholes reference as $N$ increases. The blue shaded region represents the narrowing 95% confidence interval.
+The plot shows Monte Carlo convergence toward the Black-Scholes benchmark as $N$ increases. The blue shaded region represents the narrowing 95% confidence interval.
 
 ![European Convergence](figures/european_convergence.png)
 
@@ -105,7 +105,7 @@ $$
 
 ---
 
-#### Heston Stochastic Volatility Model
+#### Heston Model
 
 Asset dynamics:
 $$
@@ -137,9 +137,11 @@ $$
 #### Heston (Euler–Maruyama Scheme)
 
 Variance update:
-$$
-v_{t+\Delta t} =
-\left| v_t + \kappa(\theta - v_t)\Delta t + \xi \sqrt{v_t \Delta t}\, Z_2 \right|
+$$v_{t+\Delta t} =
+\max\left(
+v_t + \kappa(\theta - v_t)\Delta t + \xi \sqrt{v_t \Delta t}\, Z_2,
+\,0
+\right)
 $$
 
 Asset update:
