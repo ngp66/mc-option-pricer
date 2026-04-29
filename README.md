@@ -63,7 +63,7 @@ To assess the impact of stochastic volatility, the same Monte Carlo framework is
 ## 📉 Convergence Analysis
 
 ### European Path Stability
-The plot below shows the MC estimate converging toward the Black-Scholes benchmark. The blue shaded region represents the narrowing 95% confidence interval as $N$ increases.
+The plot shows Monte Carlo convergence toward the Black-Scholes reference as $N$ increases. The blue shaded region represents the narrowing 95% confidence interval.
 
 ![European Convergence](figures/european_convergence.png)
 
@@ -91,8 +91,6 @@ All derivatives are priced via:
 $$
 V = e^{-rT}\mathbb{E}^{\mathbb{Q}}[\text{payoff}(S_T)]
 $$
-
-where $$S_t$$ follows a specified stochastic process.
 
 ---
 
@@ -128,9 +126,7 @@ $$
 
 ### Numerical Simulation (Discretization)
 
-Both models are simulated on a discrete time grid \(t_n = n\Delta t\).
-
-#### GBM (Exact Simulation Step)
+#### GBM (Exact Simulation Scheme)
 
 $$
 S_{t+\Delta t} = S_t \exp\left(\left(r - \frac{1}{2}\sigma^2\right)\Delta t + \sigma \sqrt{\Delta t} Z\right)
