@@ -13,12 +13,13 @@ A Monte Carlo framework for pricing European and path-dependent derivatives unde
 ### 📊 Monte Carlo Simulation
 - **Geometric Brownian Motion (GBM):** Optimized vectorized path generation.
 - **Flexible Engine:** Supports variable path counts ($N$) and time steps ($dt$).
+- **Heston model:** Stochastic volatility with mean-reverting variance and correlated Brownian motions.
 
 ### ⚙️ Variance Reduction
 - **Control Variates:** Leveraging the correlation between European and Asian payoffs to stabilize estimators.
 
 ### 📈 Convergence Analysis
-- Empirical verification of $O(1/\sqrt{N})$ error decay.
+- Empirical verification consistent with $O(1/\sqrt{N})$ error decay.
 - Automated visualization of confidence intervals.
 
 ---
@@ -73,7 +74,7 @@ This comparison highlights how the Control Variate (green) reaches a converged s
 
 ### Terminal Asset Distribution (GBM vs. Heston)
 
-The histogram illustrates the distribution of the terminal asset price $$S_T$$ under both models. The Geometric Brownian Motion model (GBM, blue) follows the expected log-normal shape, while the Heston model (orange) is more peaked, slightly right-shifted, and exhibits a heavier left tail.
+The histogram illustrates the distribution of the terminal asset price $$S_T$$ under both models. The GBM model (blue) follows the expected log-normal shape, while the Heston model (orange) is more peaked, slightly right-shifted, and exhibits a heavier left tail.
 
 This reflects the effect of stochastic volatility: mean-reverting variance concentrates mass near the center, while correlation and volatility fluctuations introduce asymmetry. These differences are parameter-dependent and can materially impact option pricing relative to constant-volatility assumptions.
 
@@ -83,49 +84,78 @@ This reflects the effect of stochastic volatility: mean-reverting variance conce
 
 ## 🧠 Mathematical Model
 
-### Risk-Neutral Pricing Under Stochastic Volatility
+### Risk-Neutral Pricing Framework
 
-All derivatives are priced under the risk-neutral measure:
+All derivatives are priced via:
 
-$$V = e^{-rT}\mathbb{E}^{\mathbb{Q}}[\text{payoff}(S_T)]$$
+$$
+V = e^{-rT}\mathbb{E}^{\mathbb{Q}}[\text{payoff}(S_T)]
+$$
 
-where $$S_t$$ follows a specified stochastic process depending on the chosen model.
-
-### GBM (Black–Scholes Dynamics)
-
-Asset dynamics under risk-neutral measure:
-$$dS_t = r S_t dt + \sigma S_t dW_t$$
-
-Exact discretization for simulation:
-$$S_{t+\Delta t} = S_t \exp\left(\left(r - \frac{1}{2}\sigma^2\right)\Delta t + \sigma \sqrt{\Delta t} Z\right)$$
+where $$S_t$$ follows a specified stochastic process.
 
 ---
 
-### Heston Stochastic Volatility Model
+### Stochastic Models
+
+#### GBM (Black–Scholes Model)
+
+Continuous dynamics:
+$$
+dS_t = r S_t dt + \sigma S_t dW_t
+$$
+
+---
+
+#### Heston Stochastic Volatility Model
 
 Asset dynamics:
-$$dS_t = r S_t dt + \sqrt{v_t}\, S_t dW_t^S$$
+$$
+dS_t = r S_t dt + \sqrt{v_t}\, S_t dW_t^S
+$$
 
-Variance process (mean-reverting square-root diffusion):
-$$dv_t = \kappa(\theta - v_t)dt + \xi \sqrt{v_t}\, dW_t^v$$
+Variance process:
+$$
+dv_t = \kappa(\theta - v_t)dt + \xi \sqrt{v_t}\, dW_t^v
+$$
 
-Correlation structure:
-$$dW_t^S \, dW_t^v = \rho \, dt$$
-
-#### Remark: In both models, option prices are computed via Monte Carlo estimation of the same risk-neutral expectation, with differences arising only from the dynamics of $$S_t$$ (and $$v_t$$ in the Heston case).
+Correlation:
+$$
+dW_t^S \, dW_t^v = \rho \, dt
+$$
 
 ---
 
-### Numerical Simulation Scheme
+### Numerical Simulation (Discretization)
 
-Asset evolution (Euler–Maruyama form):
-$$S_{t+\Delta t} = S_t \exp\left(\left(r - \frac{1}{2}v_t\right)\Delta t + \sqrt{v_t \Delta t} Z_1\right)$$
+Both models are simulated on a discrete time grid \(t_n = n\Delta t\).
 
-Variance evolution:
-$$v_{t+\Delta t} = \left|v_t + \kappa(\theta - v_t)\Delta t + \xi \sqrt{v_t \Delta t} Z_2\right|$$
+#### GBM (Exact Simulation Step)
 
-Correlated Brownian shocks:
-$$Z_2 = \rho Z_1 + \sqrt{1 - \rho^2}\, Z^\perp$$
+$$
+S_{t+\Delta t} = S_t \exp\left(\left(r - \frac{1}{2}\sigma^2\right)\Delta t + \sigma \sqrt{\Delta t} Z\right)
+$$
+
+---
+
+#### Heston (Euler–Maruyama Scheme)
+
+Variance update:
+$$
+v_{t+\Delta t} =
+\left| v_t + \kappa(\theta - v_t)\Delta t + \xi \sqrt{v_t \Delta t}\, Z_2 \right|
+$$
+
+Asset update:
+$$
+S_{t+\Delta t} =
+S_t \exp\left(\left(r - \frac{1}{2}v_t\right)\Delta t + \sqrt{v_t \Delta t} Z_1\right)
+$$
+
+Correlated shocks:
+$$
+Z_2 = \rho Z_1 + \sqrt{1 - \rho^2}\, Z^\perp
+$$
 
 ---
 
