@@ -1,8 +1,6 @@
 # Monte Carlo Option Pricing Framework
 
-A research-oriented Monte Carlo framework for pricing European and path-dependent derivatives, featuring variance reduction, stochastic volatility (Heston), and statistical validation tools.
-
-This project implements Monte Carlo methods for derivative pricing and model comparison under stochastic volatility frameworks.
+A Monte Carlo framework for pricing European and path-dependent derivatives under Black–Scholes and Heston dynamics, with variance reduction and convergence analysis.
 
 ---
 
@@ -85,6 +83,14 @@ This reflects the effect of stochastic volatility: mean-reverting variance conce
 
 ## 🧠 Mathematical Model
 
+### Risk-Neutral Pricing Under Stochastic Volatility
+
+All derivatives are priced under the risk-neutral measure:
+
+$$V = e^{-rT}\mathbb{E}^{\mathbb{Q}}[\text{payoff}(S_T)]$$
+
+where $$S_t$$ follows a specified stochastic process depending on the chosen model.
+
 ### GBM (Black–Scholes Dynamics)
 
 Asset dynamics under risk-neutral measure:
@@ -93,14 +99,11 @@ $$dS_t = r S_t dt + \sigma S_t dW_t$$
 Exact discretization for simulation:
 $$S_{t+\Delta t} = S_t \exp\left(\left(r - \frac{1}{2}\sigma^2\right)\Delta t + \sigma \sqrt{\Delta t} Z\right)$$
 
-Risk-neutral pricing:
-$$V = e^{-rT} \mathbb{E}[\text{payoff}]$$
-
 ---
 
 ### Heston Stochastic Volatility Model
 
-Asset price dynamics:
+Asset dynamics:
 $$dS_t = r S_t dt + \sqrt{v_t}\, S_t dW_t^S$$
 
 Variance process (mean-reverting square-root diffusion):
@@ -109,13 +112,7 @@ $$dv_t = \kappa(\theta - v_t)dt + \xi \sqrt{v_t}\, dW_t^v$$
 Correlation structure:
 $$dW_t^S \, dW_t^v = \rho \, dt$$
 
----
-
-### Risk-Neutral Pricing Under Stochastic Volatility
-
-$$V = e^{-rT}\mathbb{E}[\text{payoff}(S_T)]$$
-
-where the expectation is taken over both the asset path $$S_t$$ and variance path $$v_t$$.
+#### Remark: In both models, option prices are computed via Monte Carlo estimation of the same risk-neutral expectation, with differences arising only from the dynamics of $$S_t$$ (and $$v_t$$ in the Heston case).
 
 ---
 
@@ -158,8 +155,7 @@ mc_option_pricer/
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/ngp66/mc-option-pricing.git](https://github.com/ngp66/mc-option-pricing.git)
-   cd mc-option-pricing
+   git clone https://github.com/ngp66/mc-option-pricing.git
    ```
 
 2. Create a virtual environment (recommended)
