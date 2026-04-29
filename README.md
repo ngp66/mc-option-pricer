@@ -137,10 +137,10 @@ $$
 #### Heston (Euler–Maruyama Scheme)
 
 Variance update:
-$$v_{t+\Delta t} =
+$$vv_{t+\Delta t} =
 \max\left(
 v_t + \kappa(\theta - v_t)\Delta t + \xi \sqrt{v_t \Delta t}\, Z_2,
-\,0
+0
 \right)
 $$
 
