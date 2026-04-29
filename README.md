@@ -113,7 +113,7 @@ $$dW_t^S \, dW_t^v = \rho \, dt$$
 
 $$V = e^{-rT}\mathbb{E}[\text{payoff}(S_T)]$$
 
-where the expectation is taken over both the asset path \(S_t\) and variance path \(v_t\).
+where the expectation is taken over both the asset path $$S_t$$ and variance path $$v_t$$.
 
 ---
 
