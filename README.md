@@ -75,7 +75,9 @@ This comparison highlights how the Control Variate (green) reaches a converged s
 
 ### Terminal Asset Distribution (GBM vs. Heston)
 
-The histogram illustrates the probability density of the terminal asset price $$S_T$$. While the GBM (blue) follows a standard log-normal distribution, the Heston (orange) model exhibits fatter tails and a noticeable skew. The lower option prices under Heston reflect volatility mean reversion and asymmetric tail behavior, highlighting the limitations of constant-volatility assumptions in Black–Scholes.
+The histogram illustrates the distribution of the terminal asset price $$S_T$$ under both models. The Geometric Brownian Motion model (GBM, blue) follows the expected log-normal shape, while the Heston model (orange) is more peaked, slightly right-shifted, and exhibits a heavier left tail.
+
+This reflects the effect of stochastic volatility: mean-reverting variance concentrates mass near the center, while correlation and volatility fluctuations introduce asymmetry. These differences are parameter-dependent and can materially impact option pricing relative to constant-volatility assumptions.
 
 ![Heston](figures/heston_vs_gbm_distribution.png)
 
